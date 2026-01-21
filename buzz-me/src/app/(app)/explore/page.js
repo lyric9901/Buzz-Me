@@ -339,23 +339,26 @@ export default function ExplorePage() {
   );
 }
 
-// Polished Styles
+// Polished Styles with Modern Gradients
 const s = {
   page: {
     minHeight: "100vh",
-    background: "#0a0a0a",
+    background: "linear-gradient(180deg, #0a0a0a 0%, #1a0520 100%)",
     color: "#ffffff",
     paddingBottom: "110px", 
     fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+    position: "relative",
+    overflow: "hidden"
   },
   headerContainer: {
     position: "sticky",
     top: 0,
     zIndex: 50,
-    background: "rgba(10, 10, 10, 0.8)", 
-    backdropFilter: "blur(12px)", 
-    borderBottom: "1px solid rgba(255,255,255,0.05)",
+    background: "rgba(20, 20, 30, 0.9)", 
+    backdropFilter: "blur(20px) saturate(180%)", 
+    borderBottom: "1px solid rgba(255, 0, 128, 0.1)",
     padding: "15px 20px",
+    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)"
   },
   headerContent: {
     maxWidth: "600px",
@@ -365,7 +368,9 @@ const s = {
     fontSize: "26px",
     fontWeight: "800",
     margin: "0 0 15px 0",
-    color: "#fff",
+    background: "linear-gradient(135deg, #fff 0%, #ff0080 100%)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
     letterSpacing: "-0.5px",
   },
   searchWrapper: {
@@ -410,12 +415,13 @@ const s = {
     gap: "15px",
   },
   card: {
-    background: "#141414",
+    background: "linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))",
+    backdropFilter: "blur(10px)",
     borderRadius: "20px",
     overflow: "hidden",
-    border: "1px solid rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255, 255, 255, 0.1)",
     cursor: "pointer",
-    transition: "background 0.2s",
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   },
   skeletonCard: { 
     height: "220px", 
@@ -496,15 +502,16 @@ const s = {
     padding: "20px"
   },
   modalContent: {
-    background: "#161616",
+    background: "linear-gradient(135deg, #1a1a1a 0%, #2a1a2a 100%)",
+    backdropFilter: "blur(20px)",
     width: "100%", 
     maxWidth: "340px",
     borderRadius: "32px",
     padding: "30px",
     textAlign: "center",
     position: "relative",
-    border: "1px solid #2a2a2a",
-    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)"
+    border: "1px solid rgba(255, 0, 128, 0.2)",
+    boxShadow: "0 25px 50px -12px rgba(255, 0, 128, 0.3)"
   },
   closeBtn: {
     position: "absolute", top: "20px", right: "20px",
@@ -622,6 +629,7 @@ const s = {
     background: "linear-gradient(135deg, #ff0080, #ff4d4d)", 
     color: "white", fontWeight: "700", cursor: "pointer",
     fontSize: "16px", 
-    boxShadow: "0 8px 20px rgba(255, 0, 128, 0.25)"
+    boxShadow: "0 8px 20px rgba(255, 0, 128, 0.4)",
+    transition: "all 0.3s ease"
   },
 };
