@@ -331,7 +331,7 @@ export default function LoginPage() {
   );
 }
 
-const styles = {
+const styles: Record<string, any> = {
   page: {
     position: "relative",
     backgroundColor: "#000",

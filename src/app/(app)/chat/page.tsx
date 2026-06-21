@@ -8,11 +8,13 @@ import {
   collection, query, where, onSnapshot, doc, getDoc, orderBy 
 } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
+import type { User } from "firebase/auth";
+import type { Match, UserProfile } from "@/types";
 
 export default function ChatListPage() {
   const router = useRouter();
-  const [user, setUser] = useState(null);
-  const [matches, setMatches] = useState([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
 
   // 1. Auth Check
@@ -39,14 +41,14 @@ export default function ChatListPage() {
       const list = await Promise.all(snapshot.docs.map(async (d) => {
         const data = d.data();
         const otherUid = data.users.find((uid) => uid !== user.uid);
-        let profile = { name: "User", photoURL: "" };
+        let profile: UserProfile = { uid: otherUid || "", name: "User", photoURL: "" };
         
         if (otherUid) {
           const userSnap = await getDoc(doc(db, "users", otherUid));
-          if (userSnap.exists()) profile = userSnap.data();
+          if (userSnap.exists()) profile = { uid: otherUid, ...userSnap.data() };
         }
 
-        return { id: d.id, ...data, otherUser: profile };
+        return { id: d.id, ...data, otherUser: profile } as Match;
       }));
       
       setMatches(list);
@@ -105,7 +107,7 @@ export default function ChatListPage() {
   );
 }
 
-const styles = {
+const styles: Record<string, any> = {
   container: { minHeight: "100vh", background: "#000", color: "#fff", padding: "20px" },
   center: { height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#000" },
   title: { fontSize: "28px", fontWeight: "800", marginBottom: "20px", background: "linear-gradient(to right, #ff0080, #ff8c00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" },

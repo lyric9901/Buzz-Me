@@ -195,7 +195,7 @@ export default function AdminPage() {
 }
 
 // --- Styles (Dark Mode Admin) ---
-const s = {
+const s: Record<string, any> = {
     // ... (Previous styles same as before) ...
     page: {
         background: '#0a0a0a',

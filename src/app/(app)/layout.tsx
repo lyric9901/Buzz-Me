@@ -89,7 +89,7 @@ export default function AppLayout({ children }) {
   );
 }
 
-const styles = {
+const styles: Record<string, any> = {
   loaderContainer: {
     height: "100vh",
     display: "flex",

@@ -102,7 +102,7 @@ export default function BottomNav() {
   );
 }
 
-const styles = {
+const styles: Record<string, any> = {
   navContainer: {
     position: "fixed",
     bottom: "20px",

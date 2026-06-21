@@ -499,7 +499,7 @@ export default function ProfilePage() {
 }
 
 // --- STYLING SYSTEM ---
-const getStyles = (theme) => {
+const getStyles = (theme: string): Record<string, any> => {
     const isDark = theme === 'dark';
     const bg = isDark ? "#000" : "#fff";
     const text = isDark ? "#fff" : "#000";

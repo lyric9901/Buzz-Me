@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import type { Variants } from "framer-motion";
 import { db, auth } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, doc, getDoc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import BottomNav from "@/components/BottomNav";
@@ -48,7 +49,7 @@ export default function ActivityPage() {
     await deleteDoc(doc(db, "friend_requests", id));
   };
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -58,7 +59,7 @@ export default function ActivityPage() {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, x: -50 },
     show: { opacity: 1, x: 0 }
   };
@@ -199,7 +200,7 @@ export default function ActivityPage() {
   );
 }
 
-const s = {
+const s: Record<string, any> = {
   page: { 
     minHeight: "100vh", 
     background: "linear-gradient(180deg, #0a0a0a 0%, #1a0a1a 100%)", 

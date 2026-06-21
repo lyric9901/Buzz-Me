@@ -1,17 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { MouseEvent } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import type { User } from "firebase/auth";
 import { 
   collection, getDocs, doc, getDoc, setDoc, query, where, addDoc, deleteDoc, serverTimestamp 
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
+import type { UserProfile } from "@/types";
+
+type SwipeCardProps = {
+  profile: UserProfile & { lastSeen?: any };
+  onLike: () => void;
+  onDislike: () => void;
+  isFront: boolean;
+};
 
 /* ---------------- CHILD COMPONENT: SWIPE CARD ---------------- */
-const SwipeCard = ({ profile, onLike, onDislike, isFront }) => {
+const SwipeCard = ({ profile, onLike, onDislike, isFront }: SwipeCardProps) => {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
   const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0, 1, 1, 1, 0]);
@@ -25,8 +35,8 @@ const SwipeCard = ({ profile, onLike, onDislike, isFront }) => {
   
   const currentPhoto = photos[photoIndex];
 
-  const handleNext = (e) => { e.stopPropagation(); if (photoIndex < photos.length - 1) setPhotoIndex(i => i + 1); };
-  const handlePrev = (e) => { e.stopPropagation(); if (photoIndex > 0) setPhotoIndex(i => i - 1); };
+  const handleNext = (e: MouseEvent<HTMLDivElement>) => { e.stopPropagation(); if (photoIndex < photos.length - 1) setPhotoIndex(i => i + 1); };
+  const handlePrev = (e: MouseEvent<HTMLDivElement>) => { e.stopPropagation(); if (photoIndex > 0) setPhotoIndex(i => i - 1); };
 
   // --- ANIMATION VALUES ---
   const likeOpacity = useTransform(x, [20, 150], [0, 1]); 
@@ -41,7 +51,7 @@ const SwipeCard = ({ profile, onLike, onDislike, isFront }) => {
   const isOnline = () => {
     if (!profile.lastSeen) return false;
     const lastSeen = profile.lastSeen?.seconds ? new Date(profile.lastSeen.seconds * 1000) : new Date(profile.lastSeen);
-    return (new Date() - lastSeen) / 1000 < 300; 
+    return (Date.now() - lastSeen.getTime()) / 1000 < 300; 
   };
 
   if (!profile) return null;
@@ -151,13 +161,13 @@ const SwipeCard = ({ profile, onLike, onDislike, isFront }) => {
 
 export default function SwipePage() {
   const router = useRouter();
-  const [user, setUser] = useState(null);
-  const [myProfile, setMyProfile] = useState(null);
-  const [profiles, setProfiles] = useState([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [myProfile, setMyProfile] = useState<UserProfile | null>(null);
+  const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [index, setIndex] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [matchPopup, setMatchPopup] = useState(null);
+  const [matchPopup, setMatchPopup] = useState<UserProfile | null>(null);
 
   // Filters
   const [minAge, setMinAge] = useState(13);
@@ -181,7 +191,7 @@ export default function SwipePage() {
       const snap = await getDoc(doc(db, "users", user.uid));
       if (snap.exists()) {
         const data = snap.data();
-        setMyProfile(data);
+        setMyProfile({ uid: user.uid, ...data });
         if (data.preferences) {
           setMinAge(data.preferences.minAge || 13);
           setMaxAge(data.preferences.maxAge || 18);
@@ -204,7 +214,7 @@ export default function SwipePage() {
     );
     
     const snap = await getDocs(q);
-    const list = [];
+    const list: UserProfile[] = [];
     snap.forEach((docSnap) => {
       if (docSnap.id === user.uid) return;
       const d = docSnap.data();
@@ -435,7 +445,7 @@ export default function SwipePage() {
 }
 
 /* --- POLISHED STYLES --- */
-const s = {
+const s: Record<string, any> = {
   // PAGE GENERAL
   pageContainer: {
     position: "fixed", top: 0, left: 0, right: 0, bottom: 0,

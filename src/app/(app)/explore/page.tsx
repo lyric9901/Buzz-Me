@@ -13,6 +13,7 @@ import {
 } from "firebase/firestore";
 import BottomNav from "@/components/BottomNav";
 import { motion, AnimatePresence } from "framer-motion";
+import type { Variants } from "framer-motion";
 
 export default function ExplorePage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -151,7 +152,7 @@ export default function ExplorePage() {
   };
 
   // --- ANIMATION VARIANTS ---
-  const modalVariants = {
+  const modalVariants: Variants = {
     hidden: { opacity: 0, scale: 0.9, y: 50 },
     visible: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", damping: 25, stiffness: 300 } },
     exit: { opacity: 0, scale: 0.9, y: 50 }
@@ -340,7 +341,7 @@ export default function ExplorePage() {
 }
 
 // Polished Styles with Modern Gradients
-const s = {
+const s: Record<string, any> = {
   page: {
     minHeight: "100vh",
     background: "linear-gradient(180deg, #0a0a0a 0%, #1a0520 100%)",
