@@ -17,7 +17,6 @@ export default function ChatListPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 1. Auth Check
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       if (u) setUser(u);
@@ -26,11 +25,10 @@ export default function ChatListPage() {
     return () => unsub();
   }, [router]);
 
-  // 2. Fetch Matches
   useEffect(() => {
     if (!user) return;
 
-    // NOTE: This query requires the Firebase Index you see in the console error!
+    // NOTE: Ensure you built this Index in Firebase Console!
     const q = query(
       collection(db, "matches"),
       where("users", "array-contains", user.uid),
@@ -41,7 +39,7 @@ export default function ChatListPage() {
       const list = await Promise.all(snapshot.docs.map(async (d) => {
         const data = d.data();
         const otherUid = data.users.find((uid) => uid !== user.uid);
-        let profile: UserProfile = { uid: otherUid || "", name: "User", photoURL: "" };
+        let profile: UserProfile = { uid: otherUid || "", name: "Mystery User", photoURL: "" };
         
         if (otherUid) {
           const userSnap = await getDoc(doc(db, "users", otherUid));
@@ -60,35 +58,47 @@ export default function ChatListPage() {
 
   if (loading) return (
     <div style={styles.center}>
-       <div className="loading-spinner" style={{borderColor: '#e91e63', borderTopColor: 'transparent'}}></div>
+      <motion.div 
+        animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+        style={styles.spinner}
+      />
     </div>
   );
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Messages</h1>
+      <div style={styles.header}>
+        <h1 style={styles.title}>Messages</h1>
+        <div style={styles.badge}>{matches.length}</div>
+      </div>
       
       <div style={styles.list}>
         <AnimatePresence>
           {matches.length === 0 ? (
-            <div style={styles.empty}>No matches yet. Go swipe!</div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={styles.empty}>
+              <div style={styles.ghostIcon}>👻</div>
+              <p>It's a ghost town in here.</p>
+              <span style={{fontSize: "14px"}}>Get back to swiping!</span>
+            </motion.div>
           ) : (
             matches.map((m, i) => (
               <motion.div
                 key={m.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05, type: "spring", stiffness: 300, damping: 24 }}
                 onClick={() => router.push(`/chat/${m.id}`)}
                 style={styles.item}
+                whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.08)" }}
                 whileTap={{ scale: 0.98 }}
               >
-                <img src={m.otherUser.photoURL || "/placeholder.png"} style={styles.avatar} />
+                <img src={m.otherUser.photoURL || "https://via.placeholder.com/150"} style={styles.avatar} alt="avatar" />
                 <div style={styles.info}>
                   <h3 style={styles.name}>{m.otherUser.name}</h3>
                   <p style={styles.preview}>
                     {m.lastMessage?.isReply && "↩ "}
-                    {m.lastMessage?.text || "Say hi! 👋"}
+                    {m.lastMessage?.text || "Tap to secure the comms 🔒"}
                   </p>
                 </div>
                 {m.lastMessage?.createdAt && (
@@ -101,22 +111,24 @@ export default function ChatListPage() {
           )}
         </AnimatePresence>
       </div>
-      {/* Spacer for BottomNav */}
-      <div style={{height: 100}} /> 
     </div>
   );
 }
 
 const styles: Record<string, any> = {
-  container: { minHeight: "100vh", background: "#000", color: "#fff", padding: "20px" },
-  center: { height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#000" },
-  title: { fontSize: "28px", fontWeight: "800", marginBottom: "20px", background: "linear-gradient(to right, #ff0080, #ff8c00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" },
-  list: { display: "flex", flexDirection: "column", gap: "10px" },
-  item: { display: "flex", alignItems: "center", padding: "15px", background: "#1a1a1a", borderRadius: "15px", cursor: "pointer", border: "1px solid #333" },
-  avatar: { width: "50px", height: "50px", borderRadius: "50%", objectFit: "cover", marginRight: "15px" },
+  container: { height: "100%", padding: "20px", display: "flex", flexDirection: "column" },
+  center: { height: "100%", display: "flex", alignItems: "center", justifyContent: "center" },
+  spinner: { width: "40px", height: "40px", borderRadius: "12px", background: "linear-gradient(135deg, #ff0080, #ff8c00)" },
+  header: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px", paddingTop: "10px" },
+  title: { margin: 0, fontSize: "32px", fontWeight: "900", background: "linear-gradient(to right, #ff0080, #ff8c00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" },
+  badge: { background: "rgba(255,0,128,0.2)", color: "#ff0080", padding: "4px 12px", borderRadius: "20px", fontWeight: "bold", fontSize: "14px" },
+  list: { display: "flex", flexDirection: "column", gap: "12px", paddingBottom: "120px" }, // Extra padding for Nav
+  item: { display: "flex", alignItems: "center", padding: "16px", background: "rgba(30, 30, 30, 0.6)", backdropFilter: "blur(10px)", borderRadius: "20px", cursor: "pointer", border: "1px solid rgba(255,255,255,0.05)" },
+  avatar: { width: "56px", height: "56px", borderRadius: "50%", objectFit: "cover", marginRight: "16px", boxShadow: "0 4px 10px rgba(0,0,0,0.3)" },
   info: { flex: 1, overflow: "hidden" },
-  name: { margin: "0 0 4px 0", fontSize: "16px", fontWeight: "600" },
+  name: { margin: "0 0 6px 0", fontSize: "17px", fontWeight: "700", color: "#fff" },
   preview: { margin: 0, fontSize: "14px", color: "#888", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-  time: { fontSize: "12px", color: "#555" },
-  empty: { textAlign: "center", color: "#666", marginTop: "50px" }
+  time: { fontSize: "12px", color: "#666", fontWeight: "500", paddingLeft: "10px" },
+  empty: { textAlign: "center", color: "#888", marginTop: "60px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" },
+  ghostIcon: { fontSize: "48px", marginBottom: "10px" }
 };

@@ -6,20 +6,25 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import BottomNav from "@/components/BottomNav";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function AppLayout({ children }) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   
   const [loading, setLoading] = useState(true);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   
-  // Use ref to track the current user ID to detect login/logout shifts
-  const lastCheckedUid = useRef(null);
+  const lastCheckedUid = useRef<string | null>(null);
 
   useEffect(() => {
+    // Lock body scrolling for native app feel
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+    document.body.style.height = "100%";
+
     const unsub = onAuthStateChanged(auth, async (user) => {
-      // 1. Handle Unauthenticated State
       if (!user) {
         lastCheckedUid.current = null;
         setIsProfileComplete(false);
@@ -32,13 +37,11 @@ export default function AppLayout({ children }) {
         return;
       }
 
-      // 2. Avoid redundant Firestore checks if user hasn't changed
       if (lastCheckedUid.current === user.uid && isProfileComplete) {
         setLoading(false);
         return;
       }
 
-      // 3. Check Profile Completeness
       try {
         const snap = await getDoc(doc(db, "users", user.uid));
         const completed = snap.exists() && snap.data()?.completed === true;
@@ -46,15 +49,11 @@ export default function AppLayout({ children }) {
         setIsProfileComplete(completed);
         lastCheckedUid.current = user.uid;
 
-        // 4. Redirect if profile is incomplete (and they aren't already there)
         if (!completed && pathname !== "/profile") {
           router.replace("/profile");
-        } 
-        // Redirect away from auth pages if they ARE logged in
-        else if (completed && (pathname === "/login" || pathname === "/signup")) {
+        } else if (completed && (pathname === "/login" || pathname === "/signup")) {
           router.replace("/");
         }
-
       } catch (error) {
         console.error("Error checking profile:", error);
       } finally {
@@ -62,64 +61,91 @@ export default function AppLayout({ children }) {
       }
     });
 
-    return () => unsub();
+    return () => {
+      unsub();
+      document.body.style.overflow = "auto";
+      document.body.style.position = "static";
+    };
   }, [pathname, router, isProfileComplete]);
 
-  // UI logic for Navigation visibility
   const hideNavPaths = ["/login", "/signup", "/profile"];
   const showNav = !hideNavPaths.includes(pathname) && isProfileComplete;
 
-  if (loading) {
-    return (
-      <div style={styles.loaderContainer}>
-        {/* Note: Ensure the animation is defined in your globals.css */}
-        <div className="loading-spinner" style={styles.spinner}></div>
-        <p style={styles.loadingText}>Setting things up...</p>
-      </div>
-    );
-  }
-
   return (
     <main style={styles.main}>
-      <div style={styles.content}>
-        {children}
-      </div>
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div 
+            key="loader"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={styles.loaderContainer}
+          >
+            <motion.div 
+              animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              style={styles.spinner}
+            />
+            <p style={styles.loadingText}>Vibing with the servers...</p>
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="content"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={styles.content(showNav)}
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
       {showNav && <BottomNav />}
     </main>
   );
 }
 
 const styles: Record<string, any> = {
+  main: {
+    height: "100dvh", // Fixed the duplicate key right here 🎯
+    width: "100vw",
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: "#0a0a0a", // Sleek dark mode base
+    color: "#fff",
+    overflow: "hidden",
+  },
   loaderContainer: {
-    height: "100vh",
+    position: "absolute",
+    inset: 0,
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#0a0a0a",
+    zIndex: 9999,
   },
   spinner: {
-    width: "40px",
-    height: "40px",
-    border: "3px solid #f3f3f3",
-    borderTop: "3px solid #0070f3",
-    borderRadius: "50%",
-    marginBottom: "16px",
+    width: "48px",
+    height: "48px",
+    borderRadius: "16px",
+    background: "linear-gradient(135deg, #ff0080, #ff8c00)",
+    marginBottom: "20px",
+    boxShadow: "0 0 20px rgba(255, 0, 128, 0.5)",
   },
   loadingText: {
-    fontSize: "14px",
-    color: "#666",
-    fontWeight: "500",
-    fontFamily: "sans-serif",
+    fontSize: "15px",
+    color: "#888",
+    fontWeight: "600",
+    letterSpacing: "0.5px",
   },
-  main: {
-    minHeight: "100vh",
-    display: "flex",
-    flexDirection: "column",
-  },
-  content: {
+  content: (hasNav: boolean) => ({
     flex: 1,
-    // If Nav is shown, add padding; otherwise, let it be full screen
-    paddingBottom: "80px", 
-  },
+    position: "relative",
+    height: "100%",
+    width: "100%",
+    overflowY: "auto",
+    overflowX: "hidden",
+    paddingBottom: hasNav ? "100px" : "0", 
+  }),
 };
